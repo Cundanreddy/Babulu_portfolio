@@ -7,7 +7,7 @@ import MainScene from './components/MainScene'
 function App() {
   return (
     <div className="App">
-      {/* <Navbar /> */}
+      <Navbar />
       {/* <BuildingScene /> */}
       <div className="canvas">
         {/* <RoomScene /> */}
