@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState,Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 // import { AboutMe } from '@/app/pages/AboutMe';
-import { OrbitControls, Image, Environment } from '@react-three/drei';
+import { OrbitControls, Image, Environment,useGLTF } from '@react-three/drei';
 
 // Camera positions presets
 const CAMERA_POSITIONS = {
@@ -17,16 +17,16 @@ const CAMERA_POSITIONS = {
 };
 
 function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
-  const sphereGroup = useRef();
-  const smallSphere = useRef();
-  const prevCameraPos = useRef(new THREE.Vector3());
-  const prevCameraDir = useRef(new THREE.Vector3());
+  // const sphereGroup = useRef();
+  // const smallSphere = useRef();
+  // const prevCameraPos = useRef(new THREE.Vector3());
+  // const prevCameraDir = useRef(new THREE.Vector3());
   const [currentTVImageIndex, setCurrentTVImageIndex] = useState(0);
   
   // Room dimensions
-  const ROOM_WIDTH = 160;
+  const ROOM_WIDTH = 200;
   const ROOM_HEIGHT = 100;
-  const ROOM_DEPTH = 150;
+  const ROOM_DEPTH = 200;
   const ROOM_HALF_WIDTH = ROOM_WIDTH / 2;
   const ROOM_HALF_HEIGHT = ROOM_HEIGHT / 2;
   const ROOM_HALF_DEPTH = ROOM_DEPTH / 2;
@@ -36,6 +36,15 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
   const wallColor = 0x415262;
   const wallEmissive = 0x415262;
   const floorColor = 0x737373;
+
+  // Add granite texture loader
+  const graniteTexture = new THREE.TextureLoader().load('./textures/granite.jpg');
+  const granite_roughness= new THREE.TextureLoader().load('./textures/granite_roughness.jpg');
+  const granite_metallic= new THREE.TextureLoader().load('./textures/granite_metallic.jpg');
+  
+  // graniteTexture.wrapS = THREE.RepeatWrapping;
+  // graniteTexture.wrapT = THREE.RepeatWrapping;
+  // graniteTexture.repeat.set(4, 4);
 
   // Camera control
   const { camera, gl } = useThree();
@@ -64,6 +73,16 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
 
   const [textures, setTextures] = useState([]);
   const [currentTextureIndex, setCurrentTextureIndex] = useState(0);
+
+  // Load the sofa model
+  const { scene: sofa } = useGLTF('/3d_objects/sofa.gltf', undefined, (error) => {
+    console.error('Error loading GLTF model:', error);
+  });
+
+  // Load the center table model
+  const { scene: centerTable } = useGLTF('/3d_objects/center_table.glb', undefined, (error) => {
+    console.error('Error loading center table model:', error);
+  });
 
   useEffect(() => {
     const loadedTextures = images.map(path => {
@@ -136,48 +155,48 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
     }
   }, [activeView, camera]);
 
-  useFrame(() => {
-    const timer = Date.now() * 0.01;
-    if (sphereGroup.current) {
-      sphereGroup.current.rotation.y -= 0.002;
-    }
-    if (smallSphere.current) {
-      smallSphere.current.position.set(
-        Math.cos(timer * 0.1) * 30,
-        Math.abs(Math.cos(timer * 0.2)) * 20 + 5,
-        Math.sin(timer * 0.1) * 30
-      );
-      smallSphere.current.rotation.y = Math.PI / 2 - timer * 0.1;
-      smallSphere.current.rotation.z = timer * 0.8;
-    }
+  // useFrame(() => {
+  //   const timer = Date.now() * 0.01;
+  //   if (sphereGroup.current) {
+  //     sphereGroup.current.rotation.y -= 0.002;
+  //   }
+  //   if (smallSphere.current) {
+  //     smallSphere.current.position.set(
+  //       Math.cos(timer * 0.1) * 30,
+  //       Math.abs(Math.cos(timer * 0.2)) * 20 + 5,
+  //       Math.sin(timer * 0.1) * 30
+  //     );
+  //     smallSphere.current.rotation.y = Math.PI / 2 - timer * 0.1;
+  //     smallSphere.current.rotation.z = timer * 0.8;
+  //   }
 
-    // Get current camera position and direction
-    // const currentPos = camera.position.clone();
-    // const currentDir = new THREE.Vector3();
-    // camera.getWorldDirection(currentDir);
+  //   // Get current camera position and direction
+  //   // const currentPos = camera.position.clone();
+  //   // const currentDir = new THREE.Vector3();
+  //   // camera.getWorldDirection(currentDir);
 
-    // // Check if camera has moved significantly (more than 0.1 units)
-    // const posChanged = currentPos.distanceTo(prevCameraPos.current) > 0.1;
-    // const dirChanged = currentDir.distanceTo(prevCameraDir.current) > 0.1;
+  //   // // Check if camera has moved significantly (more than 0.1 units)
+  //   // const posChanged = currentPos.distanceTo(prevCameraPos.current) > 0.1;
+  //   // const dirChanged = currentDir.distanceTo(prevCameraDir.current) > 0.1;
 
-    // if (posChanged || dirChanged) {
-    //   console.log('Camera Position:', {
-    //     x: currentPos.x.toFixed(2),
-    //     y: currentPos.y.toFixed(2),
-    //     z: currentPos.z.toFixed(2)
-    //   });
+  //   // if (posChanged || dirChanged) {
+  //   //   console.log('Camera Position:', {
+  //   //     x: currentPos.x.toFixed(2),
+  //   //     y: currentPos.y.toFixed(2),
+  //   //     z: currentPos.z.toFixed(2)
+  //   //   });
       
-    //   console.log('Camera Target Direction:', {
-    //     x: currentDir.x.toFixed(2),
-    //     y: currentDir.y.toFixed(2),
-    //     z: currentDir.z.toFixed(2)
-    //   });
+  //   //   console.log('Camera Target Direction:', {
+  //   //     x: currentDir.x.toFixed(2),
+  //   //     y: currentDir.y.toFixed(2),
+  //   //     z: currentDir.z.toFixed(2)
+  //   //   });
 
-    //   // Update previous values
-    //   prevCameraPos.current.copy(currentPos);
-    //   prevCameraDir.current.copy(currentDir);
-    // }
-  });
+  //   //   // Update previous values
+  //   //   prevCameraPos.current.copy(currentPos);
+  //   //   prevCameraDir.current.copy(currentDir);
+  //   // }
+  // });
 
   // Responsive camera
   useEffect(() => {
@@ -250,7 +269,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
         color="#c1cbcb"
       /> */}
       {/* Sphere Group */}
-      <group ref={sphereGroup}>
+      {/* <group ref={sphereGroup}> */}
         {/* Half Sphere with Cap */}
         {/* <mesh
           position={[0, 7.5 + 15 * Math.sin(Math.PI / 180 * 30), 0]}
@@ -267,12 +286,12 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
             <meshPhongMaterial emissive={0x0000ff} color={0xffffff} specular={100}  />
           </mesh>
         </mesh> */}
-      </group>
+      {/* </group> */}
       {/* Small Icosahedron Sphere */}
-      <mesh ref={smallSphere}>
+      {/* <mesh ref={smallSphere}>
         <icosahedronGeometry args={[5, 0]} />
         <meshPhongMaterial emissive={0x0000ff} color={0xff0000} specular={80}  />
-      </mesh>
+      </mesh> */}
       {/* Walls */}
       {/* Top */}
       <mesh position={[0, ROOM_HEIGHT, 0]} rotation={[Math.PI / 2, 0, 0]}>
@@ -280,21 +299,245 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
         <meshPhongMaterial emissive={ceilingEmissive} specular={100} color={ceilingColor} />
         <pointLight position={[0, 60, 0]} intensity={2.5} distance={250} color={0xffffff} />
       </mesh>
+      
       {/* Bottom */}
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_DEPTH + 0.01]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100} color={floorColor} />
+        <meshStandardMaterial 
+          map={graniteTexture}
+          roughnessMap={granite_roughness}
+          metalnessMap={granite_metallic}
+          bumpMap={graniteTexture}
+          bumpScale={0.1}
+          displacementMap={graniteTexture}
+          displacementScale={0.05}
+        />
       </mesh>
       {/* Front */}
       
       <mesh position={[0, ROOM_HALF_HEIGHT, ROOM_HALF_DEPTH]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_HEIGHT + 0.01]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={wallEmissive} specular={100} color={wallColor} />  
+         {/* Photo Frames Grid */}
+         <group position={[15, 0, 0.1]}>
+            {/* Row 1 */}
+            {/* Frame 1 */}
+            <group position={[-55, 30, 0]}>
+              {/* Frame Border */}
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}  // Brown color
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              {/* Inner Frame */}
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              {/* Image */}
+              <Image
+                url="./images/my_work/TV_wall_wood_1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[0])}
+              />
+            </group>
+
+            {/* Frame 2 */}
+            <group position={[-15, 30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/TV_wall_wood_2.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[1])}
+              />
+            </group>
+
+            {/* Frame 3 */}
+            <group position={[25, 30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/TV_wall_wood_3.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[2])}
+              />
+            </group>
+
+            {/* Row 2 */}
+            {/* Frame 4 */}
+            <group position={[-55, 0, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+              </mesh>
+              <Image
+                url="./images/my_work/TV_wall_wood_4.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[2])}
+              />
+            </group>
+
+            {/* Frame 5 */}
+            <group position={[-15, 0, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/bedroom1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[4])}
+              />
+            </group>
+
+            {/* Frame 6 */}
+            <group position={[25, 0, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/front_elevation1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[5])}
+              />
+            </group>
+
+            {/* Row 3 */}
+            {/* Frame 7 */}
+            <group position={[-55, -30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/front_elevation2.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[6])}
+              />
+            </group>
+
+            {/* Frame 8 */}
+            <group position={[-15, -30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/front_elevation3.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[7])}
+              />
+            </group>
+
+            {/* Frame 9 */}
+            <group position={[25, -30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/hall1_1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[8])}
+              />
+            </group>
+          </group>
       </mesh>
       {/* Right */}
       <mesh position={[ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        {/* <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} /> */}
+        <meshStandardMaterial 
+          // map={graniteTexture}
+          roughness={0.7}
+          metalness={1}
+          // bumpMap={graniteTexture}
+          bumpScale={0.1}
+          // displacementMap={graniteTexture}
+          displacementScale={0.05}
+        />
+        
         {/* TV Cabinet */}
         <group position={[0, -30, 0]}>
           {/* Cabinet Base */}
@@ -365,72 +608,24 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       <mesh position={[-ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
         <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        {/* Sofa */}
+        <group position={[45, -ROOM_HALF_HEIGHT, 35]} scale={[40, 40, 40]} rotation={[0, 0, 0]}>
+          <Suspense fallback={null}>
+            {sofa && <primitive object={sofa} />}
+          </Suspense>
+        </group>
       </mesh>
       {/* back */}
       <mesh position={[0, ROOM_HALF_HEIGHT, -ROOM_HALF_DEPTH]} rotation={[0, Math.PI * 2, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.1, ROOM_HEIGHT + 0.1]} />
         <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
-        {/* Photo Frames Grid */}
-        <group position={[15, 0, 0.1]}>
-          {/* Row 1 */}
-          <Image
-            url="./images/my_work/TV_wall_wood_1.jpeg"
-            position={[-55, 30, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[0])}
-          />
-          <Image
-            url="./images/my_work/TV_wall_wood_2.jpeg"
-            position={[-15, 30, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[1])}
-          />
-          <Image
-            url="./images/my_work/TV_wall_wood_3.jpeg"
-            position={[25, 30, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[2])}
-          />
-          {/* Row 2 */}
-          <Image
-            url="./images/my_work/TV_wall_wood_4.jpeg"
-            position={[-55, 0, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[2])}
-          />
-          <Image
-            url="./images/my_work/bedroom1.jpeg"
-            position={[-15, 0, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[4])}
-          />
-          <Image
-            url="./images/my_work/front_elevation1.jpeg"
-            position={[25, 0, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[5])}
-          />
-          {/* Row 3 */}
-          <Image
-            url="./images/my_work/front_elevation2.jpeg"
-            position={[-55, -30, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[6])}
-          />
-          <Image
-            url="./images/my_work/front_elevation3.jpeg"
-            position={[-15, -30, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[7])}
-          />
-          <Image
-            url="./images/my_work/hall1_1.jpeg"
-            position={[25, -30, 0]}
-            scale={[32, 18, 1]}
-            onClick={() => handlePhotoFrame(textures[8])}
-          />
-        </group>
       </mesh>
+      {/* Center Table */}
+      <group position={[0, 19, 0]} scale={ [60, 60, 60]} rotation={[0, Math.PI/2, 0]}>
+        <Suspense fallback={null}>
+          {centerTable && <primitive object={centerTable} />}
+        </Suspense>
+      </group>
       {/* Lights */}
       <pointLight position={[0, 60, 0]} intensity={2.5} distance={250} color={0xffffff} />
       <pointLight position={[50, 50, 0]} intensity={0.5} distance={1000} color={0x00ff00} />
