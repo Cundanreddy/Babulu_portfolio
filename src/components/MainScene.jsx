@@ -4,7 +4,8 @@ import React, { useRef, useEffect, useState,Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 // import { AboutMe } from '@/app/pages/AboutMe';
-import { OrbitControls, Image, Environment,useGLTF } from '@react-three/drei';
+import { OrbitControls, Image, useGLTF,Environment } from '@react-three/drei';
+import CustomEnvironment from './CustomEnvironment';
 
 // Camera positions presets
 const CAMERA_POSITIONS = {
@@ -14,6 +15,47 @@ const CAMERA_POSITIONS = {
   right: { position: [160, 45, 0], target: [0, 40, 0] },
   top: { position: [0, 160, 0], target: [0, 0, 0] },
   back: { position: [0, 45, -160], target: [0, 40, 0] },
+};
+
+// Loading Overlay Component
+const LoadingOverlay = ({ progress }) => {
+  return (
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      background: 'rgba(0, 0, 0, 0.8)',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      color: 'white',
+      zIndex: 1000,
+      transition: 'opacity 0.5s ease-in-out',
+      opacity: progress === 100 ? 0 : 1,
+      pointerEvents: progress === 100 ? 'none' : 'auto'
+    }}>
+      <div style={{
+        width: '200px',
+        height: '4px',
+        background: '#333',
+        borderRadius: '2px',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          width: `${progress}%`,
+          height: '100%',
+          background: '#4451a6',
+          transition: 'width 0.3s ease-in-out'
+        }} />
+      </div>
+      <div style={{ marginTop: '10px', fontSize: '14px' }}>
+        Loading... {Math.round(progress)}%
+      </div>
+    </div>
+  );
 };
 
 function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
@@ -244,8 +286,289 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
 
   return (
     <>
-      {/* Environment */}
-      <Environment preset="sunset" />
+      {/* Replace default Environment with CustomEnvironment */}
+      <Environment
+        background 
+        near={1} 
+        far={1000} 
+        resolution={512}
+        // ground={{height: 15, radius: 60, scale: 0}}
+        >
+        
+      <mesh position={[0, ROOM_HEIGHT, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_DEPTH + 0.01]} />
+        <meshPhongMaterial emissive={ceilingEmissive} specular={100} color={ceilingColor} />
+        <pointLight position={[0, 60, 0]} intensity={2.5} distance={250} color={0xffffff} />
+      </mesh>
+      
+    
+      {/* Front */}
+      
+      <mesh position={[0, ROOM_HALF_HEIGHT, ROOM_HALF_DEPTH]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_HEIGHT + 0.01]} />
+        <meshPhongMaterial emissive={wallEmissive} specular={100} color={wallColor} />  
+         {/* Photo Frames Grid */}
+         <group position={[15, 0, 0.1]}>
+            {/* Row 1 */}
+            {/* Frame 1 */}
+            <group position={[-55, 30, 0]}>
+              {/* Frame Border */}
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}  // Brown color
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              {/* Inner Frame */}
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              {/* Image */}
+              <Image
+                url="./images/my_work/TV_wall_wood_1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                onClick={() => handlePhotoFrame(textures[0])}
+              />
+            </group>
+
+            {/* Frame 2 */}
+            <group position={[-15, 30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/TV_wall_wood_2.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Frame 3 */}
+            <group position={[25, 30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/TV_wall_wood_3.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Row 2 */}
+            {/* Frame 4 */}
+            <group position={[-55, 0, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+              </mesh>
+              <Image
+                url="./images/my_work/TV_wall_wood_4.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Frame 5 */}
+            <group position={[-15, 0, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/bedroom1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Frame 6 */}
+            <group position={[25, 0, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/front_elevation1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Row 3 */}
+            {/* Frame 7 */}
+            <group position={[-55, -30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/front_elevation2.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Frame 8 */}
+            <group position={[-15, -30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/front_elevation3.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+
+            {/* Frame 9 */}
+            <group position={[25, -30, 0]}>
+              <mesh rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[35, 22, 1]} />
+                <meshStandardMaterial 
+                  color={0xFFD700}
+                  roughness={0}
+                  metalness={1}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.5]} rotation={[0, Math.PI, 0]}>
+                <boxGeometry args={[33, 20, 0.1]} />
+                <meshStandardMaterial color={0x000000} />
+              </mesh>
+              <Image
+                url="./images/my_work/hall1_1.jpeg"
+                position={[0, 0, 0.6]}
+                scale={[32, 18, 1]}
+                
+              />
+            </group>
+          </group>
+      </mesh>
+      {/* Right */}
+      <mesh position={[ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
+        <meshStandardMaterial 
+          roughness={0.7}
+          metalness={1}
+          bumpScale={0.1}
+          displacementScale={0.05}
+        />
+        
+        {/* TV Cabinet */}
+        <group position={[0, -30, 0]}>
+          {/* Cabinet Base */}
+          <mesh position={[0, -10, 5]}>
+            <boxGeometry args={[ROOM_DEPTH*0.8, 20, 10]} />
+            <meshPhongMaterial emissive={0x0000ff} 
+              color={0xff66ff}
+              specular={100} 
+              shininess={100}
+              reflectivity={1}
+              envMapIntensity={2}
+              transparent={true}
+              opacity={0.95}
+            />
+          </mesh>
+          {/* TV Screen */}
+          <mesh position={[0, 40, 0.5]}>
+            <boxGeometry args={[85, 45, 0.5]} />
+            <Image
+              url={images[currentTVImageIndex]}
+              position={[0, 0, 0.5]}
+              scale={[85, 45, 0.5]}
+              
+            />
+            <meshStandardMaterial roughness={0} metalness={1} map={tvTexture}/>
+            
+          </mesh>
+          {/* TV Frame */}
+          <mesh position={[0, 40, 0]}>
+            <boxGeometry args={[87, 47, 0.5]} />
+            <meshStandardMaterial color={0x000000} />
+          </mesh> 
+          
+        </group>
+      </mesh>
+      {/* Left */}
+      <mesh position={[-ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
+        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+      </mesh>
+      {/* back */}
+      <mesh position={[0, ROOM_HALF_HEIGHT, -ROOM_HALF_DEPTH]} rotation={[0, Math.PI * 2, 0]}>
+        <planeGeometry args={[ROOM_WIDTH + 0.1, ROOM_HEIGHT + 0.1]} />
+        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+      </mesh>
+      </Environment>
       {/* Ground Mirror */}
       {/* <Reflector
         args={[40, 40, 64]}
@@ -641,14 +964,31 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
 export default function MainScene() {
   const [activeView, setActiveView] = useState('front');
   const [tvTexture, setTVTexture] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   const handleViewChange = (view) => {
     console.log('Button clicked:', view);
     setActiveView(view);
   };
 
+  // Loading progress effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 30);
+
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+      <LoadingOverlay progress={loadingProgress} />
       <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000 }}>
         <button 
           onClick={() => handleViewChange('front')}
