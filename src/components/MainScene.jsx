@@ -287,10 +287,13 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
   return (
     <>
       {/* Replace default Environment with CustomEnvironment */}
+      
+      {/* <Environment preset='sunset'/> */}
       <Environment
+      
         background 
         near={1} 
-        far={1000} 
+        far={10000} 
         resolution={512}
         // ground={{height: 15, radius: 60, scale: 0}}
         >
@@ -304,9 +307,9 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
     
       {/* Front */}
       
-      <mesh position={[0, ROOM_HALF_HEIGHT, ROOM_HALF_DEPTH]} rotation={[0, Math.PI, 0]}>
+      <mesh position={[0, 0, ROOM_HALF_DEPTH]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_HEIGHT + 0.01]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100} color={wallColor} />  
+        <meshPhongMaterial emissive={0xffffff} specular={100} color={wallColor} />  
          {/* Photo Frames Grid */}
          <group position={[15, 0, 0.1]}>
             {/* Row 1 */}
@@ -514,7 +517,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
           </group>
       </mesh>
       {/* Right */}
-      <mesh position={[ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[ROOM_HALF_WIDTH, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
         <meshStandardMaterial 
           roughness={0.7}
@@ -559,14 +562,14 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
         </group>
       </mesh>
       {/* Left */}
-      <mesh position={[-ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, Math.PI / 2, 0]}>
+      <mesh position={[-ROOM_HALF_WIDTH, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={0xffffff} specular={100}  color={wallColor} />
       </mesh>
       {/* back */}
-      <mesh position={[0, ROOM_HALF_HEIGHT, -ROOM_HALF_DEPTH]} rotation={[0, Math.PI * 2, 0]}>
+      <mesh position={[0, 0, -ROOM_HALF_DEPTH]} rotation={[0, Math.PI * 2, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={0xffffff} specular={100}  color={wallColor} />
       </mesh>
       </Environment>
       {/* Ground Mirror */}
@@ -956,7 +959,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       <pointLight position={[0, 50, 50]} intensity={0.5} distance={1000} color={0xbbbbfe} />
       <ambientLight intensity={0.3} />
       {/* Controls */}
-      <OrbitControls target={[0, 40, 0]} maxDistance={200} minDistance={10} />
+      <OrbitControls target={[0, 40, 0]} maxDistance={100} minDistance={10} />
     </>
   );
 }
@@ -989,38 +992,7 @@ export default function MainScene() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
       <LoadingOverlay progress={loadingProgress} />
-      <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000 }}>
-        <button 
-          onClick={() => handleViewChange('front')}
-          style={{ margin: '5px', padding: '8px 16px', background: activeView === 'front' ? '#4451a6' : '#fff', color: activeView === 'front' ? '#fff' : '#000' }}
-        >
-          Front
-        </button>
-        <button 
-          onClick={() => handleViewChange('left')}
-          style={{ margin: '5px', padding: '8px 16px', background: activeView === 'left' ? '#4451a6' : '#fff', color: activeView === 'left' ? '#fff' : '#000' }}
-        >
-          Left
-        </button>
-        <button 
-          onClick={() => handleViewChange('right')}
-          style={{ margin: '5px', padding: '8px 16px', background: activeView === 'right' ? '#4451a6' : '#fff', color: activeView === 'right' ? '#fff' : '#000' }}
-        >
-          Right
-        </button>
-        <button 
-          onClick={() => handleViewChange('top')}
-          style={{ margin: '5px', padding: '8px 16px', background: activeView === 'top' ? '#4451a6' : '#fff', color: activeView === 'top' ? '#fff' : '#000' }}
-        >
-          Top
-        </button>
-        <button 
-          onClick={() => handleViewChange('back')}
-          style={{ margin: '5px', padding: '8px 16px', background: activeView === 'back' ? '#4451a6' : '#fff', color: activeView === 'back' ? '#fff' : '#000' }}
-        >
-          Back
-        </button>
-      </div>
+      
       <Canvas
         shadows
         camera={{ fov: 45, near: 1, far: 500, position: [0, 75, 160] }}
