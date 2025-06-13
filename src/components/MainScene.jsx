@@ -9,12 +9,12 @@ import CustomEnvironment from './CustomEnvironment';
 
 // Camera positions presets
 const CAMERA_POSITIONS = {
-  tvfull: { position: [-5, 39, 0], target: [100, 40, 0] },
-  front: { position: [0, 45, 100], target: [0, 40, 0] },
-  left: { position: [-100, 45, 0], target: [0, 40, 0] },
-  right: { position: [160, 45, 0], target: [0, 40, 0] },
-  top: { position: [0, 160, 0], target: [0, 0, 0] },
-  back: { position: [0, 45, -160], target: [0, 40, 0] },
+  tvfull:   { position: [-5, 39, 0],  target: [100, 40, 0] },
+  front:    { position: [0, 45, 100], target: [0, 40, 0] },
+  left:     { position: [-100, 45, 0],target: [0, 40, 0] },
+  right:    { position: [100, 39, 0], target: [0, 40, 0] },
+  top:      { position: [0, 160, 0],  target: [0, 0, 0] },
+  back:     { position: [0, 39, -10],target: [0, 40, 0] },
 };
 
 // Loading Overlay Component
@@ -90,7 +90,6 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
 
   // Camera control
   const { camera, gl } = useThree();
-  const [currentView, setCurrentView] = useState('front');
 
   // Load textures
   const textureLoader = new THREE.TextureLoader();
@@ -187,7 +186,6 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       };
 
       animate();
-      setCurrentView(activeView);
 
       return () => {
         if (animationFrameId) {
@@ -260,14 +258,13 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
   }, [camera, gl]);
 
   const handlePhotoFrame = (texture) => {
-    setActiveView('left');
+    setActiveView('tvfull');
     setTVTexture(texture);
   };
 
   const handleCloseTVImage = () => {
     setActiveView('left');
-    // Reset TV texture to initial state
-    // setTVTexture(textures[9]);
+    setTVTexture(null);
   };
   
   const handleTVScreen = () => {
@@ -544,11 +541,11 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
           {/* TV Screen */}
           <mesh position={[0, 40, 0.5]}>
             <boxGeometry args={[85, 45, 0.5]} />
-            <Image
+            <Image 
               url={images[currentTVImageIndex]}
               position={[0, 0, 0.5]}
               scale={[85, 45, 0.5]}
-              
+              onClick={handleTVScreen}
             />
             <meshStandardMaterial roughness={0} metalness={1} map={tvTexture}/>
             
@@ -882,7 +879,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
           {/* TV Screen */}
           <mesh position={[0, 40, 0.5]}>
             <boxGeometry args={[85, 45, 0.5]} />
-            <Image
+            <Image 
               url={images[currentTVImageIndex]}
               position={[0, 0, 0.5]}
               scale={[85, 45, 0.5]}
@@ -959,13 +956,19 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       <pointLight position={[0, 50, 50]} intensity={0.5} distance={1000} color={0xbbbbfe} />
       <ambientLight intensity={0.3} />
       {/* Controls */}
-      <OrbitControls target={[0, 40, 0]} maxDistance={100} minDistance={10} />
+      <OrbitControls 
+        target={[0, 40, 0]} 
+        maxDistance={100} 
+        minDistance={10} 
+      />
     </>
   );
 }
 
-export default function MainScene() {
-  const [activeView, setActiveView] = useState('front');
+export default function MainScene({
+  activeView,
+  setActiveView,
+}) {
   const [tvTexture, setTVTexture] = useState(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
 

@@ -76,6 +76,25 @@
   width: 100%;
 }
 
+.orbit-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  color: inherit;
+  font-size: inherit;
+  transition: all 0.3s ease;
+}
+
+.orbit-toggle:hover {
+  color: #4451a6;
+}
+
+.orbit-toggle.active {
+  color: #4451a6;
+  font-weight: bold;
+}
+
 @media (max-width: 768px) {
   .navbar-container {
     padding: 0 1rem;
