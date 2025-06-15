@@ -4,7 +4,7 @@ import React, { useRef, useEffect, useState,Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 // import { AboutMe } from '@/app/pages/AboutMe';
-import { OrbitControls, Image, useGLTF,Environment } from '@react-three/drei';
+import { OrbitControls, Image, useGLTF,Environment, useAnimations, Html } from '@react-three/drei';
 import CustomEnvironment from './CustomEnvironment';
 
 // Camera positions presets
@@ -84,6 +84,14 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
   const granite_roughness= new THREE.TextureLoader().load('./textures/granite_roughness.jpg');
   const granite_metallic= new THREE.TextureLoader().load('./textures/granite_metallic.jpg');
   
+  // Wallpaper pattern texture
+  const wallpaperTexture = new THREE.TextureLoader().load('/textures/wall_pattern1.jpg');
+  if (wallpaperTexture) {
+    wallpaperTexture.wrapS = THREE.RepeatWrapping;
+    wallpaperTexture.wrapT = THREE.RepeatWrapping;
+    wallpaperTexture.repeat.set(8, 4);
+  }
+  
   // graniteTexture.wrapS = THREE.RepeatWrapping;
   // graniteTexture.wrapT = THREE.RepeatWrapping;
   // graniteTexture.repeat.set(4, 4);
@@ -93,27 +101,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
 
   // Load textures
   const textureLoader = new THREE.TextureLoader();
-  const images = [
-    './images/my_work/TV_wall_wood_1.jpeg',
-    './images/my_work/TV_wall_wood_2.jpeg',
-    './images/my_work/TV_wall_wood_3.jpeg',
-    './images/my_work/TV_wall_wood_4.jpeg',
-    './images/my_work/bedroom1.jpeg',
-    './images/my_work/front_elevation1.jpeg',
-    './images/my_work/front_elevation2.jpeg',
-    './images/my_work/front_elevation3.jpeg',
-    './images/my_work/hall1_1.jpeg',
-    './images/my_work/hall1_2.jpeg',
-    './images/my_work/hall2.jpeg',
-    './images/my_work/room1_1.jpeg',
-    './images/my_work/room1_2.jpeg',
-    './images/my_work/room1_3.jpeg',
-    './images/my_work/room1_4.jpeg',
-    './images/my_work/sofaset.jpeg',
-  ];
-
-  const [textures, setTextures] = useState([]);
-  const [currentTextureIndex, setCurrentTextureIndex] = useState(0);
+  const tvHomeScreenTexture = textureLoader.load('/images/home-screen-4.png');
 
   // Load the sofa model
   const { scene: sofa } = useGLTF('/3d_objects/sofa.gltf', undefined, (error) => {
@@ -125,33 +113,22 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
     console.error('Error loading center table model:', error);
   });
 
-  useEffect(() => {
-    const loadedTextures = images.map(path => {
-      const texture = textureLoader.load(
-        path,
-        undefined,
-        undefined,
-        (error) => {
-          console.error(`Error loading texture ${path}:`, error);
-        }
-      );
-      texture.needsUpdate = true;
-      return texture;
-    });
-    setTextures(loadedTextures);
-    // Set initial TV texture
-    if (loadedTextures.length > 0) {
-      setTVTexture(loadedTextures[9]);
-    }
+  // Load the person model
+  // const { scene: person, animations } = useGLTF('/3d_objects/person.glb');
+  // const { actions } = useAnimations(animations, person);
 
-    // Cleanup function
-    return () => {
-      loadedTextures.forEach(texture => {
-        if (texture) {
-          texture.dispose();
-        }
-      });
-    };
+  const personRef = useRef();
+  const armRef = useRef();
+
+  // Animate the waving arm
+  useFrame((state) => {
+    if (armRef.current) {
+      armRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.3;
+    }
+  });
+
+  useEffect(() => {
+    // No dynamic TV texture logic needed
   }, []);
 
   useEffect(() => {
@@ -194,6 +171,13 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       };
     }
   }, [activeView, camera]);
+
+  // Start waving animation
+  // useEffect(() => {
+  //   if (actions.wave) {
+  //     actions.wave.play();
+  //   }
+  // }, [actions]);
 
   // useFrame(() => {
   //   const timer = Date.now() * 0.01;
@@ -297,7 +281,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
         
       <mesh position={[0, ROOM_HEIGHT, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_DEPTH + 0.01]} />
-        <meshPhongMaterial emissive={ceilingEmissive} specular={100} color={ceilingColor} />
+        <meshPhongMaterial emissive={ceilingEmissive}  color={ceilingColor} />
         <pointLight position={[0, 60, 0]} intensity={2.5} distance={250} color={0xffffff} />
       </mesh>
       
@@ -306,7 +290,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       
       <mesh position={[0, 0, ROOM_HALF_DEPTH]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_HEIGHT + 0.01]} />
-        <meshPhongMaterial emissive={0xffffff} specular={100} color={wallColor} />  
+        <meshPhongMaterial emissive={0xffffff}  map={wallpaperTexture} />  
          {/* Photo Frames Grid */}
          <group position={[15, 0, 0.1]}>
             {/* Row 1 */}
@@ -516,12 +500,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       {/* Right */}
       <mesh position={[ROOM_HALF_WIDTH, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshStandardMaterial 
-          roughness={0.7}
-          metalness={1}
-          bumpScale={0.1}
-          displacementScale={0.05}
-        />
+        <meshPhongMaterial emissive={0xffffff}   map={wallpaperTexture} />
         
         {/* TV Cabinet */}
         <group position={[0, -30, 0]}>
@@ -530,7 +509,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
             <boxGeometry args={[ROOM_DEPTH*0.8, 20, 10]} />
             <meshPhongMaterial emissive={0x0000ff} 
               color={0xff66ff}
-              specular={100} 
+               
               shininess={100}
               reflectivity={1}
               envMapIntensity={2}
@@ -538,16 +517,12 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
               opacity={0.95}
             />
           </mesh>
+          </group>
+          <group>
           {/* TV Screen */}
           <mesh position={[0, 40, 0.5]}>
             <boxGeometry args={[85, 45, 0.5]} />
-            <Image 
-              url={images[currentTVImageIndex]}
-              position={[0, 0, 0.5]}
-              scale={[85, 45, 0.5]}
-              onClick={handleTVScreen}
-            />
-            <meshStandardMaterial roughness={0} metalness={1} map={tvTexture}/>
+            <meshStandardMaterial roughness={0} metalness={1} map={tvHomeScreenTexture}/>
             
           </mesh>
           {/* TV Frame */}
@@ -561,12 +536,12 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       {/* Left */}
       <mesh position={[-ROOM_HALF_WIDTH, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={0xffffff} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={0xffffff}   map={wallpaperTexture} />
       </mesh>
       {/* back */}
       <mesh position={[0, 0, -ROOM_HALF_DEPTH]} rotation={[0, Math.PI * 2, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={0xffffff} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={0xffffff}   map={wallpaperTexture} />
       </mesh>
       </Environment>
       {/* Ground Mirror */}
@@ -599,14 +574,14 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
           rotation={[-Math.PI / 180 * 135, 0, -Math.PI / 180 * 20]}
         >
           <sphereGeometry args={[15, 24, 24, Math.PI / 2, Math.PI * 2, 0, Math.PI / 180 * 120]} />
-          <meshPhongMaterial emissive={0x0000ff} color={0xffffff} specular={100}  /> */}
+          <meshPhongMaterial emissive={0x0000ff} color={0xffffff}   /> */}
           {/* Cap */}
           {/* <mesh
             position={[0, -15 * Math.sin(Math.PI / 180 * 30) - 0.05, 0]}
             rotation={[-Math.PI, 0, 0]}
           >
             <cylinderGeometry args={[0.1, 15 * Math.cos(Math.PI / 180 * 30), 0.1, 24, 1]} />
-            <meshPhongMaterial emissive={0x0000ff} color={0xffffff} specular={100}  />
+            <meshPhongMaterial emissive={0x0000ff} color={0xffffff}   />
           </mesh>
         </mesh> */}
       {/* </group> */}
@@ -619,7 +594,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       {/* Top */}
       <mesh position={[0, ROOM_HEIGHT, 0]} rotation={[Math.PI / 2, 0, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_DEPTH + 0.01]} />
-        <meshPhongMaterial emissive={ceilingEmissive} specular={100} color={ceilingColor} />
+        <meshPhongMaterial emissive={ceilingEmissive}  color={ceilingColor} />
         <pointLight position={[0, 60, 0]} intensity={2.5} distance={250} color={0xffffff} />
       </mesh>
       
@@ -640,7 +615,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       
       <mesh position={[0, ROOM_HALF_HEIGHT, ROOM_HALF_DEPTH]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.01, ROOM_HEIGHT + 0.01]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100} color={wallColor} />  
+        <meshPhongMaterial emissive={wallEmissive}  map={wallpaperTexture} />  
          {/* Photo Frames Grid */}
          <group position={[15, 0, 0.1]}>
             {/* Row 1 */}
@@ -850,15 +825,12 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
       {/* Right */}
       <mesh position={[ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        {/* <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} /> */}
         <meshStandardMaterial 
-          // map={graniteTexture}
           roughness={0.7}
           metalness={1}
-          // bumpMap={graniteTexture}
           bumpScale={0.1}
-          // displacementMap={graniteTexture}
           displacementScale={0.05}
+          map={wallpaperTexture}
         />
         
         {/* TV Cabinet */}
@@ -868,7 +840,7 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
             <boxGeometry args={[ROOM_DEPTH*0.8, 20, 10]} />
             <meshPhongMaterial emissive={0x0000ff} 
               color={0xff66ff}
-              specular={100} 
+               
               shininess={100}
               reflectivity={1}
               envMapIntensity={2}
@@ -879,75 +851,289 @@ function Scene({ activeView, setActiveView, setTVTexture, tvTexture }) {
           {/* TV Screen */}
           <mesh position={[0, 40, 0.5]}>
             <boxGeometry args={[85, 45, 0.5]} />
-            <Image 
-              url={images[currentTVImageIndex]}
-              position={[0, 0, 0.5]}
-              scale={[85, 45, 0.5]}
-              onClick={handleTVScreen}
-            />
-            <meshStandardMaterial roughness={0} metalness={1} map={tvTexture}/>
             
+            <meshStandardMaterial roughness={0} metalness={1} map={tvHomeScreenTexture}/>
+            
+            {/* <Html
+              position={[0, 0, 0.6]}
+              center
+              style={{
+                width: '85px',
+                height: '45px',
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '10px',
+                padding: '10px',
+                color: 'black',
+                fontSize: '12px',
+                pointerEvents: 'auto'
+              }}
+            >
+              <div style={{ 
+                flex: 'row',
+                display:'flex',
+                width: '60px', 
+                height: '60px', 
+                borderRadius: '50%', 
+                overflow: 'hidden', 
+                marginBottom: '10px' 
+              }}>
+                <img 
+                  src="/images/profile.png" 
+                  alt="Profile" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+              <div style={{ 
+                display:'flex',
+                flexDirection:'column',
+                textAlign: 'left' }}>
+                <h3 style={{ margin: '0 0 10px 0' }}>Contact Me</h3>
+                <a 
+                  href="mailto:manideepreddy9595@gmail.com" 
+                  style={{ 
+                    color: 'black', 
+                    textDecoration: 'left',
+                    display: 'flex',
+                    marginBottom: '5px'
+                  }}
+                >
+                  manideepreddy9595@gmail.com
+                </a>
+                <a 
+                  href="tel:+1234567890" 
+                  style={{ 
+                    color: 'black', 
+                    textDecoration: 'none',
+                    display: 'block',
+                    marginBottom: '5px'
+                  }}
+                >
+                  📞 +1 (234) 567-890
+                </a>
+                <a 
+                  href="https://linkedin.com/in/yourprofile" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: 'black ', 
+                    textDecoration: 'none',
+                    display: 'block'
+                  }}
+                >
+                  💼 LinkedIn Profile
+                </a>
+              </div>
+            </Html> */}
           </mesh>
           {/* TV Frame */}
           <mesh position={[0, 40, 0]}>
             <boxGeometry args={[87, 47, 0.5]} />
             <meshStandardMaterial color={0x000000} />
           </mesh> 
-          {/* Navigation Arrows */}
-          <mesh position={[-40, 40, 1]} onClick={handlePrevTVImage}>
-            <boxGeometry args={[2, 4, 0.5]} />
-            <meshStandardMaterial color={0x666666} transparent={true} opacity={0.5} />
-            <Image
-              url="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLWxlZnQiPjxwYXRoIGQ9Im0xNSAxOC02LTYgNi02Ii8+PC9zdmc+"
-              position={[0, 0, 0.1]}
-              scale={[1.5, 1.5, 1]}
-              transparent={false}
-            />
-
-          </mesh>
-          <mesh position={[40, 40, 1]} onClick={handleNextTVImage}>
-            <boxGeometry args={[2, 4, 0.5]} />
-            <meshStandardMaterial color={0x666666} transparent={true} opacity={0.5} />
-            <Image
-              url="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLXJpZ2h0Ij48cGF0aCBkPSJtOSAxOCA2LTYtNi02Ii8+PC9zdmc+"
-              position={[0, 0, 0.1]}
-              scale={[1.5, 1.5, 1]}
-              transparent={false}
-            />
-          </mesh>
-          <mesh position={[40, 60, 1]} onClick={handleCloseTVImage}>
-            <boxGeometry args={[4, 4, 0.5]} />
-            <meshStandardMaterial color={0x666666} transparent={true} opacity={0.5} />
-            <Image
-              url="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS14Ij48cGF0aCBkPSJNMTggNkYxOCA2IDE4IDE4IDYgMTggNiA2Ii8+PC9zdmc+"
-              position={[0, 0, 0.1]}
-              scale={[1.5, 1.5, 1]}
-              transparent={false}
-            />
-          </mesh>
         </group>
       </mesh>
       {/* Left */}
       <mesh position={[-ROOM_HALF_WIDTH, ROOM_HALF_HEIGHT, 0]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[ROOM_DEPTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={wallEmissive}   map={wallpaperTexture} />
         {/* Sofa */}
         <group position={[45, -ROOM_HALF_HEIGHT, 35]} scale={[40, 40, 40]} rotation={[0, 0, 0]}>
           <Suspense fallback={null}>
             {sofa && <primitive object={sofa} />}
           </Suspense>
         </group>
+        <group>
+        <mesh position={[20-ROOM_HALF_WIDTH, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 90, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[30-ROOM_HALF_WIDTH, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 100, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[40-ROOM_HALF_WIDTH, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 90, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[50-ROOM_HALF_WIDTH, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 80, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[60-ROOM_HALF_WIDTH, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 70, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[70-ROOM_HALF_WIDTH, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 60, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        </group>
       </mesh>
       {/* back */}
       <mesh position={[0, ROOM_HALF_HEIGHT, -ROOM_HALF_DEPTH]} rotation={[0, Math.PI * 2, 0]}>
         <planeGeometry args={[ROOM_WIDTH + 0.1, ROOM_HEIGHT + 0.1]} />
-        <meshPhongMaterial emissive={wallEmissive} specular={100}  color={wallColor} />
+        <meshPhongMaterial emissive={wallEmissive}   map={wallpaperTexture} />
+        <group>
+        <mesh position={[20, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 90, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[30, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 100, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[40, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 90, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[50, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 80, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[60, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 70, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        <mesh position={[70, 20-ROOM_HALF_HEIGHT, 0]}>
+          <boxGeometry args={[1, 60, 1]} />
+          <meshStandardMaterial 
+            color={0xFFD700}  // Brown color
+            roughness={0}
+            metalness={1}
+          />
+        </mesh>
+        </group>
       </mesh>
       {/* Center Table */}
       <group position={[0, 19, 0]} scale={ [60, 60, 60]} rotation={[0, Math.PI/2, 0]}>
         <Suspense fallback={null}>
           {centerTable && <primitive object={centerTable} />}
         </Suspense>
+      </group>
+      {/* Person */}
+      <group position={[ROOM_HALF_WIDTH-50, 0, 20-ROOM_HALF_DEPTH]} scale={[1, 1, 1]}>
+        {/* Thought Cloud */}
+        <group position={[-30, 70, 0]}>
+          {/* Main cloud bubble */}
+          <mesh position={[0, 0, 0]}>
+            <sphereGeometry args={[13, 40, 16]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+          {/* Small bubbles */}
+          {/* <mesh position={[8, 5, 0]}>
+            <sphereGeometry args={[4, 16, 16]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh> */}
+          <mesh position={[15, 0, 0]}>
+            <sphereGeometry args={[3, 16, 16]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+          <mesh position={[18, -8, 0]}>
+            <sphereGeometry args={[2, 13, 10]} />
+            <meshStandardMaterial color="#ffffff" />
+          </mesh>
+          {/* Text */}
+          <Html position={[0, 0, 0]} center style={{ 
+            width: '150px', 
+            textAlign: 'center',
+            color: '#000000',
+            fontSize: '14px',
+            fontWeight: 'bold',
+            pointerEvents: 'none'
+          }}>
+            <div>Hello, this is the Manideep reddy!<br/> Just look Around</div>
+          </Html>
+        </group>
+
+        {/* Body */}
+        <mesh position={[0, 35, 0]}>
+          <capsuleGeometry args={[5, 20, 4, 8]} />
+          <meshStandardMaterial color="#4a4a4a" />
+        </mesh>
+        
+        {/* Head */}
+        <mesh position={[0, 55, 0]}>
+          <sphereGeometry args={[7, 16, 16]} />
+          <meshStandardMaterial color="#ffdbac" />
+        </mesh>
+
+
+        {/* Left Arm */}
+        <group position={[0, 40, 0]} >
+        
+          <group position={[0, 0, 0]} ref={armRef}>
+            <mesh position={[-10, 9, 0]} rotation={[0, 0, Math.PI/4]} >
+              <capsuleGeometry args={[2, 15, 4, 8]} />
+              <meshStandardMaterial color="#4a4a4a" />
+            </mesh>
+      </group>
+        </group>
+       
+
+        {/* Right Arm */}
+        <mesh position={[8, 40, 0]} rotation={[0,0,Math.PI/10]}>
+          <capsuleGeometry args={[2, 15, 4, 8]} />
+          <meshStandardMaterial color="#4a4a4a" />
+        </mesh>
+
+        {/* Left Leg */}
+        <mesh position={[-4, 15, 0]}>
+          <capsuleGeometry args={[3, 20, 4, 8]} />
+          <meshStandardMaterial color="#2a2a2a" />
+        </mesh>
+
+        {/* Right Leg */}
+        <mesh position={[4, 15, 0]}>
+          <capsuleGeometry args={[3, 20, 4, 8]} />
+          <meshStandardMaterial color="#2a2a2a" />
+        </mesh>
       </group>
       {/* Lights */}
       <pointLight position={[0, 60, 0]} intensity={2.5} distance={250} color={0xffffff} />
